@@ -5,7 +5,7 @@
 Run this one-liner on your CyberPanel server as root:
 
 ```bash
-sh <(curl -fsSL https://raw.githubusercontent.com/zpratikpathak/cyberpanel-true-repo/refs/heads/home/setup.sh || wget -qO- https://raw.githubusercontent.com/zpratikpathak/cyberpanel-true-repo/refs/heads/home/setup.sh)
+sh <(curl -fsSL https://raw.githubusercontent.com/zpratikpathak/cyberpanel-mod/refs/heads/home/setup.sh || wget -qO- https://raw.githubusercontent.com/zpratikpathak/cyberpanel-mod/refs/heads/home/setup.sh)
 ```
 
 ## What It Does
