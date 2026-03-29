@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/CyberpanelAdOns/Adonpermission", "destination": "/api/CyberpanelAdOns/Adonpermission" }
+  ]
+}
