@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -11,78 +11,95 @@ ORIG_URL="https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
 NEW_URL="https://cyberpanel-mod.vercel.app/CyberpanelAdOns/Adonpermission"
 CYBERCP_DIR="/usr/local/CyberCP"
 
+repeat_char() {
+    char="$1"
+    count="$2"
+    str=""
+    i=0
+    while [ "$i" -lt "$count" ]; do
+        str="${str}${char}"
+        i=$((i + 1))
+    done
+    printf '%s' "$str"
+}
+
 progress_bar() {
-    local current=$1 total=$2 width=40
-    local pct=$((current * 100 / total))
-    local filled=$((current * width / total))
-    local empty=$((width - filled))
+    current=$1
+    total=$2
+    width=40
+    pct=$((current * 100 / total))
+    filled=$((current * width / total))
+    empty=$((width - filled))
     printf "\r  ${CYAN}[${GREEN}%s${NC}%s${CYAN}]${NC} ${BOLD}%3d%%${NC}" \
-        "$(printf '#%.0s' $(seq 1 $filled 2>/dev/null))" \
-        "$(printf '-%.0s' $(seq 1 $empty 2>/dev/null))" \
+        "$(repeat_char '#' "$filled")" \
+        "$(repeat_char '-' "$empty")" \
         "$pct"
 }
 
-echo ""
-echo -e "${CYAN}${BOLD}=================================================${NC}"
-echo -e "${CYAN}${BOLD}          CYBERPANEL MOD INSTALLER${NC}"
-echo -e "${CYAN}${BOLD}=================================================${NC}"
-echo ""
+printf "\n"
+printf "${CYAN}${BOLD}=================================================${NC}\n"
+printf "${CYAN}${BOLD}          CYBERPANEL MOD INSTALLER${NC}\n"
+printf "${CYAN}${BOLD}=================================================${NC}\n"
+printf "\n"
 
 # --- Root check ---
 if [ "$(id -u)" -ne 0 ]; then
-    echo -e "  ${RED}${BOLD}ERROR:${NC} This script must be run as ${YELLOW}root${NC}."
-    echo -e "  ${YELLOW}Try:${NC} sudo bash setup.sh"
-    echo ""
+    printf "  ${RED}${BOLD}ERROR:${NC} This script must be run as ${YELLOW}root${NC}.\n"
+    printf "  ${YELLOW}Try:${NC} sudo sh setup.sh\n"
+    printf "\n"
     exit 1
 fi
-echo -e "  ${GREEN}✓${NC} Running as root"
+printf "  ${GREEN}✓${NC} Running as root\n"
 
 # --- CyberPanel directory check ---
 if [ ! -d "$CYBERCP_DIR" ]; then
-    echo -e "  ${RED}${BOLD}ERROR:${NC} CyberPanel directory not found at ${YELLOW}${CYBERCP_DIR}${NC}"
-    echo ""
+    printf "  ${RED}${BOLD}ERROR:${NC} CyberPanel directory not found at ${YELLOW}%s${NC}\n" "$CYBERCP_DIR"
+    printf "\n"
     exit 1
 fi
-echo -e "  ${GREEN}✓${NC} CyberPanel directory found"
-echo ""
+printf "  ${GREEN}✓${NC} CyberPanel directory found\n"
+printf "\n"
 
 # --- Scan files ---
-echo -e "  ${YELLOW}→${NC} Scanning files..."
+printf "  ${YELLOW}→${NC} Scanning files...\n"
 cd "$CYBERCP_DIR" || exit 1
-mapfile -t files < <(find . -type f 2>/dev/null)
-total=${#files[@]}
-echo -e "  ${GREEN}✓${NC} Found ${BOLD}${total}${NC} files to process"
-echo ""
+total=$(find . -type f 2>/dev/null | wc -l)
+printf "  ${GREEN}✓${NC} Found ${BOLD}%d${NC} files to process\n" "$total"
+printf "\n"
 
 # --- Apply patches ---
-echo -e "  ${YELLOW}→${NC} Applying patches..."
+printf "  ${YELLOW}→${NC} Applying patches...\n"
 patched=0
-for i in "${!files[@]}"; do
-    file="${files[$i]}"
+current=0
+find . -type f 2>/dev/null | while IFS= read -r file; do
+    current=$((current + 1))
     if grep -q "$ORIG_URL" "$file" 2>/dev/null; then
         sed -i "s|${ORIG_URL}|${NEW_URL}|g" "$file"
-        ((patched++))
+        patched=$((patched + 1))
+        printf '%d\n' 1
     fi
-    progress_bar $((i + 1)) "$total"
-done
-echo ""
-echo -e "  ${GREEN}✓${NC} Patched ${BOLD}${patched}${NC} files"
-echo ""
+    progress_bar "$current" "$total"
+done > /tmp/cyberpanel_mod_patched
+printf "\n"
+patched=$(wc -l < /tmp/cyberpanel_mod_patched)
+rm -f /tmp/cyberpanel_mod_patched
+printf "  ${GREEN}✓${NC} Patched ${BOLD}%d${NC} files\n" "$patched"
+printf "\n"
 
 # --- Restart service ---
-echo -e "  ${YELLOW}→${NC} Restarting lscpd service..."
+printf "  ${YELLOW}→${NC} Restarting lscpd service...\n"
 if systemctl restart lscpd 2>/dev/null; then
-    echo -e "  ${GREEN}✓${NC} Service restarted successfully"
+    printf "  ${GREEN}✓${NC} Service restarted successfully\n"
 else
-    echo -e "  ${RED}✗${NC} Failed to restart lscpd (may not be running)"
+    printf "  ${RED}✗${NC} Failed to restart lscpd (may not be running)\n"
 fi
 
 # --- Done ---
-echo ""
-echo -e "${GREEN}${BOLD}=================================================${NC}"
-echo -e "${GREEN}${BOLD}           INSTALLATION COMPLETE${NC}"
-echo -e "${GREEN}${BOLD}=================================================${NC}"
-echo ""
-echo -e "  ${GREEN}✓${NC} All premium features are now unlocked"
-echo -e "  ${CYAN}ℹ${NC} Re-run this script after any CyberPanel update"
-echo ""
+printf "\n"
+printf "${GREEN}${BOLD}=================================================${NC}\n"
+printf "${GREEN}${BOLD}           INSTALLATION COMPLETE${NC}\n"
+printf "${GREEN}${BOLD}=================================================${NC}\n"
+printf "\n"
+printf "  ${GREEN}✓${NC} All premium features are now unlocked\n"
+printf "  ${CYAN}ℹ${NC}  Re-run this script after any CyberPanel update\n"
+printf "\n"
